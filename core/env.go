@@ -3,7 +3,7 @@ package core
 import (
 	"log"
 	"os"
-	
+
 	"github.com/joho/godotenv"
 )
 
@@ -13,7 +13,10 @@ type Env struct {
 }
 
 func NewEnv() *Env {
-	err := godotenv.Load()
+	// Specify the full path to the .env file
+	envPath := "C:/Users/USER/OneDrive/Documents/uas-api/.env"
+
+	err := godotenv.Load(envPath)
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
