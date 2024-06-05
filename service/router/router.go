@@ -53,6 +53,18 @@ func (r *Router) NewRouter() http.Handler {
 		}
 	})
 
+	// Create user handler
+	r.gin.POST("/user", func(c *gin.Context) {
+		var user entities.User
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		r.app.Mysql.Create(&user)
+		c.JSON(http.StatusCreated, user)
+	})
+
 	// Get user data handler
 	r.gin.GET("/user/:id", func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.Param("id"))
@@ -89,6 +101,20 @@ func (r *Router) NewRouter() http.Handler {
 		c.JSON(http.StatusOK, user)
 	})
 
+	// Delete user handler
+	r.gin.DELETE("/user/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+		var user entities.User
+		r.app.Mysql.First(&user, id)
+		if user.ID == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+
+		r.app.Mysql.Delete(&user)
+		c.JSON(http.StatusOK, gin.H{"msg": "User deleted"})
+	})
+
 	// Record water intake handler
 	r.gin.POST("/water", func(c *gin.Context) {
 		var intake entities.WaterIntake
@@ -99,7 +125,7 @@ func (r *Router) NewRouter() http.Handler {
 		intake.Date = time.Now()
 
 		r.app.Mysql.Create(&intake)
-		c.JSON(http.StatusOK, intake)
+		c.JSON(http.StatusCreated, intake)
 	})
 
 	// Get water intake history handler
@@ -108,6 +134,41 @@ func (r *Router) NewRouter() http.Handler {
 		var intakes []entities.WaterIntake
 		r.app.Mysql.Where("user_id = ?", userId).Find(&intakes)
 		c.JSON(http.StatusOK, intakes)
+	})
+
+	// Update water intake handler
+	r.gin.PUT("/water/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+		var intake entities.WaterIntake
+		r.app.Mysql.First(&intake, id)
+		if intake.ID == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Water intake not found"})
+			return
+		}
+
+		var updatedIntake entities.WaterIntake
+		if err := c.ShouldBindJSON(&updatedIntake); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		intake.Amount = updatedIntake.Amount
+		r.app.Mysql.Save(&intake)
+		c.JSON(http.StatusOK, intake)
+	})
+
+	// Delete water intake handler
+	r.gin.DELETE("/water/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+		var intake entities.WaterIntake
+		r.app.Mysql.First(&intake, id)
+		if intake.ID == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Water intake not found"})
+			return
+		}
+
+		r.app.Mysql.Delete(&intake)
+		c.JSON(http.StatusOK, gin.H{"msg": "Water intake deleted"})
 	})
 
 	return r.gin
