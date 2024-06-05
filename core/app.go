@@ -1,14 +1,21 @@
 package core
 
 import (
-	"log"
-
-	"github.com/joho/godotenv"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func LoadEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+type Application struct {
+	Env   *Env
+	Mysql *gorm.DB
+	Web   *gin.Engine
+}
+
+func NewApp() *Application {
+	app := &Application{}
+	app.Env = NewEnv()
+	app.Mysql = NewMySQLConnection(app)
+	app.Web = NewWeb()
+
+	return app
 }

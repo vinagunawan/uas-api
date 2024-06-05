@@ -1,18 +1,19 @@
 package main
 
 import (
-	"backend/core"
-	"backend/service/router"
-
-	"github.com/gorilla/mux"
+	"fmt"
+	"uas-api/core"
+	"uas-api/service/router"
 )
 
 func main() {
-	core.LoadEnv()
-	core.ConnectDatabase()
+	app := core.NewApp()
 
-	r := mux.NewRouter()
-	router.RegisterRoutes(r)
+	env := app.Env
+	gin := app.Web
 
-	core.RunServer(r)
+	router := router.RouterConstructor(gin, app)
+	router.NewRouter()
+
+	gin.Run(fmt.Sprintf(":%s", env.Port))
 }

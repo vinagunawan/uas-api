@@ -1,18 +1,17 @@
 package core
 
 import (
+	"log"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func ConnectDatabase() {
-	dsn := GetEnv("DB_USER") + ":" + GetEnv("DB_PASS") + "@tcp(" + GetEnv("DB_HOST") + ":" + GetEnv("DB_PORT") + ")/" + GetEnv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
-	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func NewMySQLConnection(app *Application) *gorm.DB {
+	db, err := gorm.Open(mysql.Open(app.Env.MysqlUrl), &gorm.Config{})
 	if err != nil {
-		panic("Failed to connect to database!")
+		log.Fatal("failed to connect to database: ", err)
 	}
 
-	DB = database
+	return db
 }
