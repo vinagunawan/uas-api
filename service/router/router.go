@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"uas-api/service/entities"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Router struct {
@@ -45,22 +45,20 @@ func (r *Router) NewRouter() http.Handler {
 			return
 		}
 
-		var dbUser entities.User
-		r.app.Mysql.Where("username = ?", user.Username).First(&dbUser)
+		// Log the received username and password
+		log.Printf("Received login request: username=%s, password=%s", user.Username, user.Password)
 
-		err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
+		var dbUser entities.User
+		err := r.app.Mysql.Where("username = ? AND password = ?", user.Username, user.Password).First(&dbUser).Error
 		if err != nil {
+			log.Printf("Login failed: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
-		// Hash the password before storing it in the database
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-		dbUser.Password = string(hashedPassword)
-		r.app.Mysql.Save(&dbUser)
-
-		c.JSON(http.StatusOK, gin.H{"id": dbUser.ID, "username": dbUser.Username})
+		c.JSON(http.StatusOK, dbUser)
 	})
+
 	// Create user handler
 	r.gin.POST("/user", func(c *gin.Context) {
 		var user entities.User
