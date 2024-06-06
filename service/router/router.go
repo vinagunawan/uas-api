@@ -49,10 +49,10 @@ func (r *Router) NewRouter() http.Handler {
 		log.Printf("Received login request: username=%s, password=%s", user.Username, user.Password)
 
 		var dbUser entities.User
-		err := r.app.Mysql.Where("username = ? AND password = ?", user.Username, user.Password).First(&dbUser).Error
+		err := r.app.Mysql.Where("username = '?' AND password = '?'", user.Username, user.Password).First(&dbUser).Error
 		if err != nil {
 			log.Printf("Login failed: %v", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			c.JSON(http.StatusOK, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
